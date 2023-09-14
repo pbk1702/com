@@ -1,0 +1,62 @@
+:root {
+  user-select: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  font-family: Tahoma;
+}
+
+div#footer {
+  width: 100%;
+  bottom: 0;
+  display:inline-block;
+}
+
+div#main {
+  cursor: pointer;
+}
+
+.button {
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+  display: block;
+  cursor: pointer;
+  text-align: center;
+  margin: 5px;
+  padding: 5px;
+  min-width: 50px;
+  float: left;
+} 
+
+#btSetLeft {
+  float: left;
+}
+
+#btSetRight {
+  float: right;
+}
+
+#sensBoost, #sensGain {
+  text-align: center;
+  float:left;
+}
+
+.noselect {
+  user-select: none
+}
+
+#sensText{
+  background: none;
+  cursor: default;
+}
+
+canvas#canvas
+{
+  cursor: pointer;
+  /* border: solid 1px red; */
+}

@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>WebGL playground page</title>
+<style>
+  body { overflow: hidden }
+  body { margin: 0 }
+</style>
+</head>
+<body>
+<canvas></canvas>
+</body>
+
+<script>
+  'use strict'
+  const bgColor = "#000000"
+  const fgColor = "#FFFFFF"
+  const root = document.documentElement
+  root.style.backgroundColor = bgColor
+  root.style.color = fgColor
+  
+  const canvas = document.querySelector('canvas')
+  
+  function resizeCanvasToDisplaySize(canvas) {
+    const t = canvas
+    const w = canvas.clientWidth
+    const h = canvas.clienHeight
+    if(t.width  !== w) t.width  = w
+    if(t.height !== h) t.height = h
+  }
+  
+  function drawFrame(timestamp) {
+    resizeCanvasToDisplaySize(canvas)
+  }
+  
+  window.raf = () => { window.requestAnimationFrame(drawFrame) }
+  window.addEventListener('load', window.raf)
+  window.addEventListener('resize', () => { 
+    if(window.resizeTimeout) clearTimeout(window.resizeTimeout)
+    window.resizeTimeout = setTimeout(window.raf, 200)
+  } )
+</script>
+</html>

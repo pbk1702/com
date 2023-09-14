@@ -1,0 +1,225 @@
+<html>
+<head>
+<style>
+html { overflow:hidden }
+body { margin:0 }
+</style>
+</head>
+<body>
+  <canvas>
+  </canvas>
+</body>
+<script>
+  //const bgColor = "#000"
+  //const fgColor = "#FFF"
+  const bgColor = "#FFF"
+  const fgColor = "#000"
+  const gaugeAngle = 41.38 * 2
+  
+  const root = document.documentElement
+  root.style.backgroundColor = bgColor
+  root.style.color = fgColor
+  
+  const canvas = document.querySelector('canvas')
+  const ctx = canvas.getContext('2d')
+  
+  
+  function redrawCanvas(timestamp) {
+
+    // resize canvas if needed
+    function resizeCanvasToDisplaySize(canvas, w, h) {
+      let t = canvas
+      if(t.width  != w) t.width  = w
+      if(t.height != h) t.height = h      
+    }    
+    resizeCanvasToDisplaySize(canvas, window.innerWidth, window.innerHeight)
+    
+    const divCount = 38
+    const sweepAngle = gaugeAngle
+    const startAngle = 180 + 90 - sweepAngle / 2
+    const endAngle   = 180 + 90 + sweepAngle / 2
+    let w = canvas.width
+    let h = canvas.height
+    const lineWidth = 1.0 / 300 * w
+    
+    w -= lineWidth * 2
+    h -= lineWidth * 2
+    let x = lineWidth
+    let y = lineWidth
+    
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // set to identity matrix
+    ctx.translate(x, y)
+    
+    const radius = w / 2 / Math.sin(((sweepAngle / 2) * Math.PI / 180))    
+    const p = Math.PI * 2 * radius * sweepAngle / 360 / divCount
+    
+    const fontSize = p
+    const rset    = radius
+    const rgauge1 = radius  - p * .618
+    const rgauge2 = rgauge1 - 2 * p
+    const rtext   = Math.min(rgauge1, rgauge2) + Math.abs(rgauge1 - rgauge2) / 2
+    const rdivs   = rgauge1 - 3 * p
+    const rneedle = rgauge1 - 2.5 * p
+    ctx.fillStyle   = bgColor
+    ctx.strokeStyle = fgColor
+    ctx.lineWidth   = lineWidth
+    
+    ctx.save()
+    ctx.translate(w/2, radius)
+    
+    // point of origin circle
+    ctx.beginPath()
+    ctx.fillStyle = fgColor
+    ctx.arc(0, 0, p/2, 0, Math.PI * 2)
+    ctx.fill()
+    
+    
+    let a,b,i
+    
+    
+    function arad(i) {
+      return (startAngle + i / divCount * sweepAngle) * Math.PI/180
+    }
+    
+    function drawGaugeSectorArcs(min, max) {
+      ctx.beginPath()
+      ctx.arc(0, 0, rgauge1, arad(min), arad(max), false)
+      ctx.arc(0, 0, rgauge2, arad(max), arad(min),  true)
+      ctx.closePath()
+      ctx.stroke()
+    }
+    
+    function drawGaugeSectorLines(list) {
+      list.forEach(i => {
+        ctx.save()
+        ctx.rotate(arad(i))
+        ctx.moveTo(rgauge1, 0)
+        ctx.lineTo(rgauge2, 0)
+        ctx.restore()
+      })
+      ctx.stroke()
+    }
+    
+    // draw set division line
+    ctx.save()
+    ctx.rotate(arad(14))
+    ctx.moveTo(rset   , 0)
+    ctx.lineTo(rgauge2, 0)
+    ctx.stroke()
+    ctx.restore()
+    
+    drawGaugeSectorArcs( 0, 11)
+    drawGaugeSectorArcs(17, 38)
+    
+    drawGaugeSectorLines(Array.of(4,6,8,10))        
+    drawGaugeSectorLines(Array.of(18,20,22,24,28,30,32,34))
+    
+    // double L shaped divisions
+    ctx.save()
+    ctx.beginPath()
+    for(i = 0; i <= divCount; i++) {
+      ctx.save()
+      a = arad(i)
+      b = rdivs
+      x = b * Math.cos(a)
+      y = b * Math.sin(a)
+      ctx.translate(x, y)
+      ctx.rotate(a - Math.PI / 2)
+      ctx.moveTo(0,p/2)
+      ctx.lineTo(0,0)
+      switch (i) {
+        case 0: 
+        ctx.lineTo(-p/4,0)
+        break;
+        case divCount:
+        ctx.lineTo(p/4,0)
+        break;
+        default:
+        ctx.moveTo(-p/4,0)
+        ctx.lineTo( p/4,0)
+      }
+      ctx.restore()
+    }
+    ctx.stroke()
+    
+    // gauge text
+    function drawGaugeText(text, n) {
+      ctx.save()
+      let a = (startAngle + n/divCount * sweepAngle) * Math.PI / 180
+      let r = rtext
+      ctx.translate(r * Math.cos(a), r * Math.sin(a))
+      ctx.rotate(a + Math.PI/2)
+      let h = Math.abs(rgauge1 - rgauge2) * 0.618
+      let w = h
+      ctx.clearRect(-w/2, -h/2, w, h)
+      ctx.fillText(text, 0, 0)
+      ctx.restore()
+    }
+    ctx.save()
+    ctx.font = fontSize.toFixed(2) + 'px Tahoma'
+    ctx.textAlign    = 'center'
+    ctx.textBaseline = 'middle'
+    drawGaugeText("RAISE",  2)
+    drawGaugeText("SET"  , 14)
+    drawGaugeText("FALL" , 26)
+    drawGaugeText("TEST" , 36)
+    ctx.restore()
+    
+    function drawArrow(angle) {
+      let a = (180 + angle) * Math.PI / 180
+      let r = rneedle
+      let w = 1.5 * p
+      let h = 1.5 * p
+      ctx.save()
+      ctx.rotate(a)
+      ctx.beginPath()
+      ctx.moveTo(r - w * 0.00, +h * 0.00)
+      ctx.lineTo(r - w * 0.75, +h * 0.25)
+      ctx.lineTo(r - w * 1.00, +h * 0.1125)
+      ctx.lineTo(r - w * 1.00, -h * 0.1125)
+      ctx.lineTo(r - w * 0.75, -h * 0.25)
+      ctx.moveTo(r - w * 0.00, -h * 0.00)
+      ctx.fill()
+      ctx.lineWidth = 0.15 * p 
+      ctx.beginPath()
+      ctx.moveTo(0,0)
+      ctx.lineTo(r - w, 0)
+      ctx.stroke()
+      ctx.restore()
+    }
+    drawArrow(180 + startAngle + 14 / divCount * sweepAngle)
+  }
+  
+  window.raf = () => { requestAnimationFrame(redrawCanvas) }
+  window.addEventListener('load', window.raf)
+  window.addEventListener('resize', () => {
+      if(window.resizeTimeout) 
+        clearTimeout(window.resizeTimeout)
+      window.resizeTimeout = setTimeout(window.raf, 200)
+    }
+  )
+    
+  Array.prototype.min = function() {
+    const arr = this
+    if(arr.length === 0) return undefined
+    let output = arr[0]
+    for(let i = 1; i < arr.length; i++) {
+      let a = arr[i]
+      if(a < output) output = a
+    }
+    return output
+  }
+
+  Array.prototype.max = function() {
+    const arr = this
+    if(arr.length === 0) return undefined
+    let output = arr[0]
+    for(let i = 1; i < arr.length; i++) {
+      let a = arr[i]
+      if(a > output) output = a
+    }
+    return output
+  }    
+  
+</script>
+</html>

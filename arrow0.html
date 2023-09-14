@@ -1,0 +1,24 @@
+<html>
+<head>
+<style>
+  html { overflow: hidden }
+  body { margin: 0 }
+</style>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+<script>
+  // arrow height// arrowlessheight
+  // y: 0,0; 0.7177, 1.0; 1.0, 0.4631
+  
+
+  const canvas = document.querySelector('canvas')
+  canvas.width = canvas.clientWidth
+  canvas.height = canvas.clientHeight
+  const ctx = canvas.getContext('2d')
+  ctx.translate ( canvas.width / 2, canvas.width / 2)
+  ctx.arc(0, 0, 100, 0, Math.PI * 2)
+  ctx.stroke()
+  </script>
+</html>

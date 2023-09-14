@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+   <meta name="mobile-web-app-capable" content="yes">
+   <link rel="manifest" href="manifest.json">
+   <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico"/>   
+   <link rel="stylesheet" type="text/css" href="main.css" />
+  </head>
+  
+  <script type="text/javascript">
+  'use strict'
+  var ws_url = "ws://127.0.0.1:8080"
+  var ws_protocol = "test1-protocol"
+  </script>
+ 
+  <body>
+  
+  <!-- Main -->
+  <div id="main">
+    <canvas id="canvas"></canvas>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer">
+    <div id="settingsButton" class="button">SETTINGS</div>
+    <div id="bleButton" class="button">BLE</div>
+    <div id="wsButton"  class="button">WS</div> 
+    <div id="sensBoost">
+      <div id="sensBoost" class="button">XXX</div>
+      <div id="sensMin" class="button">MIN</div>
+      <div id="sensMid" class="button">OPT</div>
+      <div id="sensMax" class="button">MAX</div>
+    </div>
+    <div id="sensGain">
+      <div id="sensDown"  class="button">-</div>
+      <div id="sensText" class="button">-.-</div>
+      <div id="sensUp"  class="button">+</div>
+    </div>
+  </div>
+  
+  <div id="preferences">
+    <div>
+    <h1>gauges</h1>
+    <h1>about</h1>
+    </div>
+    <div>
+      <ul>
+        <li>Horizontal</li>
+        <li>Theta-Meter Advanced</li>
+        <li>Circular</li>
+      </ul>
+    </div>
+  </div>
+  
+  </body>
+
+  <script type="text/javascript" src="ws.js"></script>
+  <script type="text/javascript" src="ble.js"></script>
+
+  </html>

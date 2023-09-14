@@ -1,0 +1,220 @@
+<html>
+<head>
+<style>
+html { overflow:hidden }
+body { margin:0 }
+canvas { }
+</style>
+</head>
+<body>
+  <canvas>
+  </canvas>
+</body>
+<script>
+
+  // rectangles with fade
+  //const bgColor = "#000"
+  //const fgColor = "#FFF"
+  // circle square triangle cross
+  const bgColor = "#FFF"
+  const fgColor = "#000"
+  //const gaugeAngle = 41.38 * 2
+  const gaugeAngle = 41.38 * 2
+  
+  const root = document.documentElement
+  root.style.backgroundColor = bgColor
+  root.style.color = fgColor
+  
+  const canvas = document.querySelector('canvas')
+  const ctx = canvas.getContext('2d')
+  
+  const minTA = .941
+  const maxTA = 6.50
+  
+  let instTA = maxTA
+  let baseTA = maxTA
+  
+  let autoSet = false
+  
+  function setButton_click() {
+    baseTA = instTA
+    // request redraw
+    raf()
+  }
+  
+  function onresize(event) {
+    // request redraw
+    raf()
+  }
+  
+  function onDrawFrame(timestamp) {
+    // resize canvas if needed
+    function resizeCanvas(canvas, w, h) {
+      let t = canvas
+      if(t.width  != w) t.width  = w
+      if(t.height != h) t.height = h      
+    }    
+    resizeCanvas(canvas, window.innerWidth, window.innerHeight)
+    // draw canvas
+    redrawCanvas(timestamp)
+  }
+  
+  function redrawCanvas(timestamp) {
+
+    const divCount = 38
+    const sweepAngle = gaugeAngle
+    const startAngle = 180 + 90 - sweepAngle / 2
+    const endAngle   = 180 + 90 + sweepAngle / 2
+    let w = canvas.width
+    let h = canvas.height
+    const lineWidth = 1.0 / 300 * w
+    
+    ctx.strokeStyle = fgColor
+    ctx.fillStyle   = fgColor
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // set to identity matrix
+    w -= lineWidth * 2
+    h -= lineWidth * 2
+    let x,y
+    let i,a
+    x = lineWidth
+    y = lineWidth
+    ctx.translate(x, y)
+    ctx.moveTo(x,y)
+    ctx.lineTo(w,h)
+   
+    const radius = w / 2 / Math.sin(((sweepAngle / 2) * Math.PI / 180))
+    const p = Math.PI * 2 * radius * sweepAngle / 360 / divCount
+    const rgauge  = radius
+    const rgauge2 = radius - p 
+    ctx.translate(w / 2, radius)
+    
+    // sector arcs
+    ctx.beginPath()
+    ctx.arc(0,0,rgauge - 0,0,Math.PI * 2)
+    ctx.arc(0,0,rgauge - 2 * p,0,Math.PI * 2)
+    ctx.stroke()
+    
+    for(i = 0; i <= divCount; i++) {
+      
+    }
+    
+    ctx.save()
+    ctx.beginPath()
+    a = (startAngle + 14/divCount * sweepAngle) * Math.PI / 180
+    ctx.rotate(a)
+    ctx.rect(radius - 2 * p, 0, p , p)
+    ctx.arc(radius - 2 * p, 0, p, 0, 2 * Math.PI)
+    ctx.stroke()
+    ctx.restore()
+    
+    // hud arrows 'current'
+    ctx.save()
+    ctx.beginPath()
+    a = (startAngle + 1 / 2 * sweepAngle) * Math.PI / 180
+    //a = (startAngle + 14 / divCount * sweepAngle) * Math.PI / 180
+    ctx.rotate(a)
+    ctx.save()
+    ctx.translate(radius, 0)
+    ctx.moveTo( 0, -p/2)
+    ctx.lineTo( 0, +p/2)
+    ctx.lineTo(-p * 1.2, 0)
+    ctx.closePath()
+    ctx.restore()
+    ctx.translate(radius - 3 * p, 0)
+    ctx.moveTo( 0,    0)
+    ctx.lineTo(-p * 1.2, -p/2)
+    ctx.lineTo(-p * 1.2, +p/2)
+    ctx.closePath()
+    ctx.stroke()
+    ctx.restore()
+    // arrow - just a line
+    ctx.beginPath()
+    ctx.save()
+    ctx.rotate((180 + 90) * Math.PI / 180)
+    ctx.moveTo(0,0)
+    ctx.lineTo(radius - 5 * p, 0)
+    ctx.restore()
+    ctx.stroke()
+  }
+  
+  window.raf = () => { requestAnimationFrame(onDrawFrame) }
+  window.addEventListener('load', window.raf)
+  window.addEventListener('resize', () => {
+      if(window.resizeTimeout) 
+        clearTimeout(window.resizeTimeout)
+      window.resizeTimeout = setTimeout(onresize, 200)
+    }
+  )
+    
+  Array.prototype.min = function() {
+    const arr = this
+    if(arr.length === 0) return undefined
+    let output = arr[0]
+    for(let i = 1; i < arr.length; i++) {
+      let a = arr[i]
+      if(a < output) output = a
+    }
+    return output
+  }
+
+  Array.prototype.max = function() {
+    const arr = this
+    if(arr.length === 0) return undefined
+    let output = arr[0]
+    for(let i = 1; i < arr.length; i++) {
+      let a = arr[i]
+      if(a > output) output = a
+    }
+    return output
+  }    
+  
+  function ServerHandler(data) {
+    instTA = r2ta(u2r(data / 1000))
+    raf()
+  }
+  
+  function u2r(input) {
+    const R0   = 84000 // ohms
+    const vMin = 0.0 // volts
+    const vMax = 3.211 // volts
+    const vDif = vMax - vMin
+    return (input < vDif) ? (input * R0) / (vDif - input) : 999999.999;
+  }  
+
+  function r2ta(input) {
+    /*
+    input in OHMS
+    PC = 21250*(TA - 0.941)/(6.5 - TA)
+    TA = PC/(PC + 21250)*(6.5 - .941) + .941 
+    TA   PC
+    .941 0  
+    1.0  227
+    2.0  5k
+    3.0  12.5k
+    4.0  26k
+    5.0  57.5k
+    6.0  215k
+    6.5  infinity
+    */ 
+    return input / (input + 21250) * (maxTA - minTA) + minTA;
+  }
+
+  function connectWebSocket() {
+    ws = new WebSocket('ws://127.0.0.1:8080', "test1-protocol")
+    ws.onmessage = function(event) { ServerHandler(event.data) }
+    ws.onerror = function(event) { 
+      console.log(event) 
+      if(ws.connectTimeout) window.clearTimeout(ws.timeout)
+      ws.connectTimeout = window.setTimeout(connectWebSocket, 3000)
+    }
+  }
+  
+  window.addEventListener('load', function() {
+    if (('WebSocket' in window) && (window.WebSocket !== undefined)) 
+      connectWebSocket()
+    // request redraw
+    onresize()
+  }, false)
+  
+</script>
+</html>
